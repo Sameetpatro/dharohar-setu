@@ -75,6 +75,7 @@ fun NodeDetailScreen(
     onNavigateToComments:   ((Int, Int, String) -> Unit)? = null,   // (nodeId, siteId, nodeName)
     onNavigateToInstants:   ((Int, Int, String) -> Unit)? = null,   // (nodeId, siteId, nodeName)
     onNavigateToInsights:   ((Int, String) -> Unit)? = null,        // (siteId, siteName)
+    onNavigateToVideo:      ((Int, Int) -> Unit)? = null,           // (siteId, nodeId)
     viewModel:              NodeDetailViewModel = viewModel()
 ) {
     val context   = LocalContext.current
@@ -221,10 +222,14 @@ fun NodeDetailScreen(
 
                                 // ── Action grid (Watch Video, Scan QR) ────────
                                 NodeActionsGrid(
-                                    node    = node,
-                                    siteId  = siteId,
-                                    context = context,
-                                    onQr    = onNavigateToQr
+                                    node         = node,
+                                    siteId       = siteId,
+                                    context      = context,
+                                    onQr         = onNavigateToQr,
+                                    onWatchVideo = { sId, nId ->
+                                        stopTts()
+                                        onNavigateToVideo?.invoke(sId, nId)
+                                    }
                                 )
                                 Spacer(Modifier.height(20.dp))
 
@@ -969,10 +974,11 @@ private fun NodeInfoCard(
 
 @Composable
 private fun NodeActionsGrid(
-    node:    Node,
-    siteId:  Int,
-    context: android.content.Context,
-    onQr:    (Long) -> Unit
+    node:         Node,
+    siteId:       Int,
+    context:      android.content.Context,
+    onQr:         (Long) -> Unit,
+    onWatchVideo: ((Int, Int) -> Unit)? = null
 ) {
     Row(
         modifier              = Modifier.fillMaxWidth(),
@@ -985,7 +991,11 @@ private fun NodeActionsGrid(
             modifier       = Modifier.weight(1f),
             onClick        = {
                 if (!node.videoUrl.isNullOrBlank()) {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(node.videoUrl)))
+                    if (onWatchVideo != null) {
+                        onWatchVideo(siteId, node.id)
+                    } else {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(node.videoUrl)))
+                    }
                 } else {
                     android.widget.Toast.makeText(
                         context,
@@ -1143,9 +1153,12 @@ fun NodeImageGallery(
 
 @Composable
 fun WatchVideoBar(
-    videoUrl: String,
-    label:    String,
-    modifier: Modifier = Modifier
+    siteId:       Int,
+    nodeId:       Int,
+    videoUrl:     String,
+    label:        String,
+    modifier:     Modifier = Modifier,
+    onWatchVideo: ((Int, Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val accent = LocalAccent.current
@@ -1185,7 +1198,13 @@ fun WatchVideoBar(
                     ),
                     RoundedCornerShape(18.dp)
                 )
-                .clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))) }
+                .clickable {
+                    if (onWatchVideo != null) {
+                        onWatchVideo(siteId, nodeId)
+                    } else {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+                    }
+                }
                 .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1199,7 +1218,7 @@ fun WatchVideoBar(
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(label, color = tokens.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Text("Tap to open video", color = accent.dark.copy(alpha = 0.72f), fontSize = 11.sp)
+                    Text("Tap to play video", color = accent.dark.copy(alpha = 0.72f), fontSize = 11.sp)
                 }
                 Text("▶", color = accent.primary.copy(alpha = glow), fontSize = 18.sp)
             }

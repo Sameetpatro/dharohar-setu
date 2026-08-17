@@ -253,7 +253,8 @@ fun AppNavigation(
                 onBack               = { navController.popBackStack() },
                 onNavigateToVoice    = { name, id -> navController.navigate(voiceChatRoute(name, id, "")) },
                 onNavigateToQrScan   = { id -> navController.navigate(qrScanRoute("Site", id.toString())) },
-                onNavigateToInsights = { id, name -> navController.navigate(insightsRoute(id, name)) }
+                onNavigateToInsights = { id, name -> navController.navigate(insightsRoute(id, name)) },
+                onNavigateToVideo    = { sId, nId -> navController.navigate(videoPlayerRoute(sId, nId)) }
             )
         }
 
@@ -302,6 +303,9 @@ fun AppNavigation(
                 },
                 onNavigateToInsights   = { iSiteId, iSiteName ->
                     navController.navigate(insightsRoute(iSiteId, iSiteName))
+                },
+                onNavigateToVideo      = { sId, nId ->
+                    navController.navigate(videoPlayerRoute(sId, nId))
                 }
             )
         }
@@ -622,6 +626,23 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() }
             )
         }
+
+        // ── Video Player ───────────────────────────────────────────────────
+        composable(
+            route     = "video_player/{siteId}/{nodeId}",
+            arguments = listOf(
+                navArgument("siteId") { type = NavType.IntType },
+                navArgument("nodeId") { type = NavType.IntType }
+            )
+        ) { backStack ->
+            val siteId = backStack.arguments?.getInt("siteId") ?: 0
+            val nodeId = backStack.arguments?.getInt("nodeId") ?: 0
+            VideoPlayerScreen(
+                siteId = siteId,
+                nodeId = nodeId,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 
         BonusGameHost()
@@ -695,3 +716,6 @@ fun nodeCommentsRoute(nodeId: Int, siteId: Int, nodeName: String): String {
     val encoded = URLEncoder.encode(nodeName, "UTF-8")
     return "node_comments/$nodeId/$siteId/$encoded"
 }
+
+fun videoPlayerRoute(siteId: Int, nodeId: Int): String =
+    "video_player/$siteId/$nodeId"
