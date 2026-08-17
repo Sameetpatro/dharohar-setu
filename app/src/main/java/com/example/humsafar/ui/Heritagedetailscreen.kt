@@ -108,6 +108,7 @@ fun HeritageDetailScreen(
     onNavigateToVoice: (String, String) -> Unit,
     onNavigateToQrScan: (String) -> Unit,
     onNavigateToInsights: (Int, String) -> Unit = { _, _ -> },
+    onNavigateToVideo: ((Int, Int) -> Unit)? = null,
     viewModel: HeritageDetailViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -286,7 +287,12 @@ fun HeritageDetailScreen(
 
                             site.introVideoUrl?.takeIf { it.isNotBlank() }?.let { url ->
                                 HeritageVideoCard(label = "Watch Intro Video") {
-                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                    stopTts()
+                                    if (onNavigateToVideo != null) {
+                                        onNavigateToVideo(site.id, 0)
+                                    } else {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                    }
                                 }
                                 Spacer(Modifier.height(16.dp))
                             }
