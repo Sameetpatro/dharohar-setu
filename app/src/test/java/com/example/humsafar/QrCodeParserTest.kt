@@ -1,5 +1,3 @@
-// app/src/test/java/com/example/humsafar/QrCodeParserTest.kt
-
 package com.example.humsafar
 
 import com.example.humsafar.utils.QrCodeParser
@@ -31,11 +29,7 @@ class QrCodeParserTest {
         )
         assertEquals(
             "12345",
-            QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/12345")
-        )
-        assertEquals(
-            "12345",
-            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/note/12345")
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/12345")
         )
         assertEquals(
             "ABC_123",
@@ -55,7 +49,7 @@ class QrCodeParserTest {
         )
         assertEquals(
             "12345",
-            QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/12345/")
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/12345/")
         )
     }
 
@@ -71,7 +65,7 @@ class QrCodeParserTest {
         )
         assertEquals(
             "12345",
-            QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/12345?source=lens&ref=poster#details")
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/12345?source=lens&ref=poster#details")
         )
         assertEquals(
             "NODE_2",
@@ -89,10 +83,6 @@ class QrCodeParserTest {
             "NODE 1",
             QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/NODE%201")
         )
-        assertEquals(
-            "NOTE 123",
-            QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/NOTE%20123")
-        )
     }
 
     @Test
@@ -103,7 +93,7 @@ class QrCodeParserTest {
         )
         assertEquals(
             "12345",
-            QrCodeParser.extractNodeIdentifier("   https://app.versel.app/note/12345   ")
+            QrCodeParser.extractNodeIdentifier("   https://humsafar.vercel.app/node/12345   ")
         )
         assertEquals(
             "IIITS-0-KING",
@@ -118,23 +108,19 @@ class QrCodeParserTest {
         assertNull(QrCodeParser.extractNodeIdentifier("   "))
         assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/"))
         assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node///"))
-        assertNull(QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/"))
-        assertNull(QrCodeParser.extractNodeIdentifier("https://app.versel.app/note///"))
     }
 
     @Test
     fun extractNodeIdentifier_pathTraversal_rejected() {
         assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/../../etc/passwd"))
-        assertNull(QrCodeParser.extractNodeIdentifier("https://app.versel.app/note/../../etc/passwd"))
         assertNull(QrCodeParser.extractNodeIdentifier("../secret"))
         assertNull(QrCodeParser.extractNodeIdentifier("node/../hack"))
-        assertNull(QrCodeParser.extractNodeIdentifier("note/../hack"))
     }
 
     @Test
     fun isNodeUrl_detectsCorrectly() {
         assertTrue(QrCodeParser.isNodeUrl("https://humsafar.vercel.app/node/NODE_1"))
-        assertTrue(QrCodeParser.isNodeUrl("https://app.versel.app/note/12345"))
+        assertTrue(QrCodeParser.isNodeUrl("https://humsafar.vercel.app/node/12345"))
         assertTrue(QrCodeParser.isNodeUrl("http://localhost:3000/node/IIITS-0-KING"))
         assertFalse(QrCodeParser.isNodeUrl("NODE_1"))
         assertFalse(QrCodeParser.isNodeUrl("12345"))

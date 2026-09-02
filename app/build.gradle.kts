@@ -46,7 +46,7 @@ android {
             "\"${localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "ds_instants")}\""
         )
 
-        val appLinksDomain = localProperties.getProperty("APP_LINKS_DOMAIN", "humsafar.vercel.app")
+        val appLinksDomain = localProperties.getProperty("APP_LINKS_DOMAIN", "dharohar-setu.onrender.com")
         val publicNodeUrl = localProperties.getProperty("PUBLIC_NODE_URL", "https://$appLinksDomain/node")
         manifestPlaceholders["appLinksDomain"] = appLinksDomain
         buildConfigField("String", "APP_LINKS_DOMAIN", "\"$appLinksDomain\"")

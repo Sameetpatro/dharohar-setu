@@ -22,11 +22,20 @@ object DeepLinkHandler {
     fun handleIntent(intent: Intent?) {
         val uri = intent?.data ?: return
         val rawUriString = uri.toString()
-        Log.d(TAG, "Checking intent URI for App Link: $rawUriString")
+        Log.d(TAG, "Checking intent URI for deep link: $rawUriString")
 
-        val nodeIdentifier = QrCodeParser.extractNodeIdentifier(rawUriString)
+        // Custom scheme: humsafar://node/{NODE_ID}
+        val nodeIdentifier = if (uri.scheme.equals("humsafar", ignoreCase = true) &&
+            uri.host.equals("node", ignoreCase = true)
+        ) {
+            uri.pathSegments?.firstOrNull()?.trim()?.takeIf { it.isNotBlank() }
+        } else {
+            // HTTPS App Link or standard deep link
+            QrCodeParser.extractNodeIdentifier(rawUriString)
+        }
+
         if (!nodeIdentifier.isNullOrBlank()) {
-            Log.i(TAG, "Discovered node App Link targeting identifier: $nodeIdentifier")
+            Log.i(TAG, "Discovered deep link targeting identifier: $nodeIdentifier")
             _pendingDeepLink.value = DeepLinkTarget(nodeIdentifier)
         }
     }

@@ -7,8 +7,8 @@ import java.net.URLDecoder
 object QrCodeParser {
 
     /**
-     * Extracts and normalizes a note/node identifier from either:
-     * 1. A complete HTTPS URL: "https://app.versel.app/note/12345" or "https://humsafar.vercel.app/node/NODE_1"
+     * Extracts and normalizes a node identifier from either:
+     * 1. A complete HTTPS URL: "https://humsafar.vercel.app/node/12345" or "https://humsafar.vercel.app/node/NODE_1"
      * 2. An old-style plain text ID: "12345", "NODE_1", or "IIITS-0-KING"
      *
      * Handles URL decoding, whitespace, query parameters, URL fragments,
@@ -24,9 +24,7 @@ object QrCodeParser {
 
         val candidate = if (trimmed.startsWith("http://", ignoreCase = true) ||
             trimmed.startsWith("https://", ignoreCase = true) ||
-            trimmed.contains("/note/", ignoreCase = true) ||
             trimmed.contains("/node/", ignoreCase = true) ||
-            trimmed.startsWith("/note", ignoreCase = true) ||
             trimmed.startsWith("/node", ignoreCase = true)
         ) {
             extractFromUrl(trimmed)
@@ -48,23 +46,18 @@ object QrCodeParser {
 
     private fun extractFromUrl(urlStr: String): String? {
         return try {
-            // Find "/note/" or "/node/" marker
-            val noteMarker = "/note/"
             val nodeMarker = "/node/"
-            val noteIndex = urlStr.indexOf(noteMarker, ignoreCase = true)
             val nodeIndex = urlStr.indexOf(nodeMarker, ignoreCase = true)
 
-            val rawSegment = when {
-                noteIndex != -1 -> urlStr.substring(noteIndex + noteMarker.length)
-                nodeIndex != -1 -> urlStr.substring(nodeIndex + nodeMarker.length)
-                else -> {
-                    val parsed = URI.create(urlStr)
-                    val path = parsed.path ?: return null
-                    when {
-                        path.startsWith("/note", ignoreCase = true) -> path.removePrefix("/note").trimStart('/')
-                        path.startsWith("/node", ignoreCase = true) -> path.removePrefix("/node").trimStart('/')
-                        else -> path.trimStart('/')
-                    }
+            val rawSegment = if (nodeIndex != -1) {
+                urlStr.substring(nodeIndex + nodeMarker.length)
+            } else {
+                val parsed = URI.create(urlStr)
+                val path = parsed.path ?: return null
+                if (path.startsWith("/node", ignoreCase = true)) {
+                    path.removePrefix("/node").trimStart('/')
+                } else {
+                    path.trimStart('/')
                 }
             }
 
@@ -80,21 +73,19 @@ object QrCodeParser {
     }
 
     /**
-     * Checks if the given raw input is an HTTPS note or node deep link URL.
+     * Checks if the given raw input is an HTTPS node deep link URL.
      */
     fun isNodeUrl(rawInput: String?): Boolean {
         if (rawInput.isNullOrBlank()) return false
         val trimmed = rawInput.trim()
         return (trimmed.startsWith("http://", ignoreCase = true) ||
                 trimmed.startsWith("https://", ignoreCase = true)) &&
-                (trimmed.contains("/note/", ignoreCase = true) ||
-                 trimmed.contains("/node/", ignoreCase = true) ||
-                 trimmed.contains("/note", ignoreCase = true) ||
+                (trimmed.contains("/node/", ignoreCase = true) ||
                  trimmed.contains("/node", ignoreCase = true))
     }
 
     /**
-     * Constructs a full public QR URL for a given note/node identifier.
+     * Constructs a full public QR URL for a given node identifier.
      */
     fun buildNodeQrUrl(
         nodeIdentifier: String,

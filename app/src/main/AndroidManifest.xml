@@ -64,21 +64,29 @@
                     android:path="/__/auth/action" />
             </intent-filter>
 
-            <!-- Android App Links for Note / Node Details -->
+            <!-- Android App Links for Node Details (QR Flow) — verified -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:scheme="https"
-                    android:host="${appLinksDomain}"
-                    android:pathPrefix="/note" />
-                <data
-                    android:scheme="https"
-                    android:host="${appLinksDomain}"
-                    android:pathPrefix="/node" />
+                <data android:scheme="https" />
+                <data android:host="${appLinksDomain}" />
+                <data android:pathPrefix="/node" />
             </intent-filter>
+
+            <!-- Custom scheme deep link (humsafar://node/NODE_ID) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="humsafar"
+                    android:host="node"
+                    android:pathPrefix="/" />
+            </intent-filter>
+
         </activity>
 
         <!-- Chatbot Activity -->
