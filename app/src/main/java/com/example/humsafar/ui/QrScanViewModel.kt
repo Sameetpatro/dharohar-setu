@@ -9,6 +9,7 @@ import com.example.humsafar.data.TripManager
 import com.example.humsafar.models.QrScanResult
 import com.example.humsafar.network.HumsafarClient
 import com.example.humsafar.network.SiteDetail
+import com.example.humsafar.utils.QrCodeParser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,13 @@ class QrScanViewModel : ViewModel() {
     // ── QR detected by camera ─────────────────────────────────────────────
     fun onQrDetected(rawQr: String) {
         if (!isProcessing.compareAndSet(false, true)) return
-        val qrValue = rawQr.trim()
+        val normalized = QrCodeParser.extractNodeIdentifier(rawQr)
+        if (normalized == null) {
+            _uiState.value = QrUiState.Error("Invalid QR code format")
+            isProcessing.set(false)
+            return
+        }
+        val qrValue = normalized
         lastScannedQr = qrValue
 
         viewModelScope.launch {

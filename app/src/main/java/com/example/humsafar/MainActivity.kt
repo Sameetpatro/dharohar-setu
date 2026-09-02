@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                 }
         }
 
-        handleEmailLinkIntent(intent)
+        handleIncomingIntent(intent)
 
         setContent {
             var accent by remember { mutableStateOf<Accent>(appPrefs.getAccent()) }
@@ -104,13 +104,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleEmailLinkIntent(intent)
+        handleIncomingIntent(intent)
     }
 
-    private fun handleEmailLinkIntent(intent: Intent?) {
+    private fun handleIncomingIntent(intent: Intent?) {
         val link = intent?.data?.toString() ?: return
 
-        Log.d("MainActivity", "Received deep link: $link")
+        Log.d("MainActivity", "Received intent link: $link")
 
         if (AuthManager.isSignInWithEmailLink(link)) {
             Log.d("MainActivity", "Valid email link detected")
@@ -141,6 +141,9 @@ class MainActivity : ComponentActivity() {
                     android.widget.Toast.LENGTH_LONG
                 ).show()
             }
+        } else {
+            // Android App Link or node URL
+            com.example.humsafar.navigation.DeepLinkHandler.handleIntent(intent)
         }
     }
 }

@@ -1,0 +1,126 @@
+// app/src/test/java/com/example/humsafar/QrCodeParserTest.kt
+
+package com.example.humsafar
+
+import com.example.humsafar.utils.QrCodeParser
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class QrCodeParserTest {
+
+    @Test
+    fun extractNodeIdentifier_plainNodeId_returnsSame() {
+        assertEquals("NODE_1", QrCodeParser.extractNodeIdentifier("NODE_1"))
+        assertEquals("IIITS-0-KING", QrCodeParser.extractNodeIdentifier("IIITS-0-KING"))
+        assertEquals("IIIT-1-CANTEEN", QrCodeParser.extractNodeIdentifier("IIIT-1-CANTEEN"))
+        assertEquals("QTB-0-KING", QrCodeParser.extractNodeIdentifier("QTB-0-KING"))
+    }
+
+    @Test
+    fun extractNodeIdentifier_httpsUrl_extractsNodeId() {
+        assertEquals(
+            "NODE_1",
+            QrCodeParser.extractNodeIdentifier("https://my.domain.vercel.app/node/NODE_1")
+        )
+        assertEquals(
+            "IIITS-0-KING",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/IIITS-0-KING")
+        )
+        assertEquals(
+            "ABC_123",
+            QrCodeParser.extractNodeIdentifier("https://custom.domain.com/node/ABC_123")
+        )
+    }
+
+    @Test
+    fun extractNodeIdentifier_trailingSlash_handledCorrectly() {
+        assertEquals(
+            "NODE_1",
+            QrCodeParser.extractNodeIdentifier("https://my.domain.vercel.app/node/NODE_1/")
+        )
+        assertEquals(
+            "IIITS-0-KING",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/IIITS-0-KING/")
+        )
+    }
+
+    @Test
+    fun extractNodeIdentifier_withQueryParamsAndFragments_stripsExtra() {
+        assertEquals(
+            "NODE_1",
+            QrCodeParser.extractNodeIdentifier("https://my.domain.vercel.app/node/NODE_1?source=camera&ref=poster")
+        )
+        assertEquals(
+            "IIITS-0-KING",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/IIITS-0-KING#overview")
+        )
+        assertEquals(
+            "NODE_2",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/NODE_2?lang=hi#top")
+        )
+    }
+
+    @Test
+    fun extractNodeIdentifier_urlEncoded_decodesProperly() {
+        assertEquals(
+            "IIIT-1-CANTEEN",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/IIIT%2D1%2DCANTEEN")
+        )
+        assertEquals(
+            "NODE 1",
+            QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/NODE%201")
+        )
+    }
+
+    @Test
+    fun extractNodeIdentifier_whitespace_trimmed() {
+        assertEquals(
+            "NODE_1",
+            QrCodeParser.extractNodeIdentifier("   https://humsafar.vercel.app/node/NODE_1   ")
+        )
+        assertEquals(
+            "IIITS-0-KING",
+            QrCodeParser.extractNodeIdentifier("   IIITS-0-KING   ")
+        )
+    }
+
+    @Test
+    fun extractNodeIdentifier_invalidOrEmpty_returnsNull() {
+        assertNull(QrCodeParser.extractNodeIdentifier(null))
+        assertNull(QrCodeParser.extractNodeIdentifier(""))
+        assertNull(QrCodeParser.extractNodeIdentifier("   "))
+        assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/"))
+        assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node///"))
+    }
+
+    @Test
+    fun extractNodeIdentifier_pathTraversal_rejected() {
+        assertNull(QrCodeParser.extractNodeIdentifier("https://humsafar.vercel.app/node/../../etc/passwd"))
+        assertNull(QrCodeParser.extractNodeIdentifier("../secret"))
+        assertNull(QrCodeParser.extractNodeIdentifier("node/../hack"))
+    }
+
+    @Test
+    fun isNodeUrl_detectsCorrectly() {
+        assertTrue(QrCodeParser.isNodeUrl("https://humsafar.vercel.app/node/NODE_1"))
+        assertTrue(QrCodeParser.isNodeUrl("http://localhost:3000/node/IIITS-0-KING"))
+        assertFalse(QrCodeParser.isNodeUrl("NODE_1"))
+        assertFalse(QrCodeParser.isNodeUrl("https://humsafar.vercel.app/about"))
+        assertFalse(QrCodeParser.isNodeUrl(null))
+    }
+
+    @Test
+    fun buildNodeQrUrl_constructsExpectedUrl() {
+        assertEquals(
+            "https://humsafar.vercel.app/node/NODE_1",
+            QrCodeParser.buildNodeQrUrl("NODE_1", "https://humsafar.vercel.app/node")
+        )
+        assertEquals(
+            "https://humsafar.vercel.app/node/IIITS-0-KING",
+            QrCodeParser.buildNodeQrUrl("IIITS-0-KING", "https://humsafar.vercel.app/node/")
+        )
+    }
+}

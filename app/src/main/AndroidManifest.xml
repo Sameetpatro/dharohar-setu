@@ -63,6 +63,18 @@
                     android:host="dharoharsetu.firebaseapp.com"
                     android:path="/__/auth/action" />
             </intent-filter>
+
+            <!-- Android App Links for Node Details (QR Migration) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="${appLinksDomain}"
+                    android:pathPrefix="/node/" />
+            </intent-filter>
         </activity>
 
         <!-- Chatbot Activity -->

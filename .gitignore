@@ -49,3 +49,6 @@ obj/
 *.swp
 
 *.google-services.json
+
+
+docs/
