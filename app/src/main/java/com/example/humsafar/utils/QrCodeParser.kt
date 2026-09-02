@@ -7,15 +7,15 @@ import java.net.URLDecoder
 object QrCodeParser {
 
     /**
-     * Extracts and normalizes a node identifier from either:
-     * 1. A complete HTTPS URL: "https://my.domain.vercel.app/node/NODE_1"
-     * 2. An old-style plain text node ID: "NODE_1" or "IIITS-0-KING"
+     * Extracts and normalizes a note/node identifier from either:
+     * 1. A complete HTTPS URL: "https://app.versel.app/note/12345" or "https://humsafar.vercel.app/node/NODE_1"
+     * 2. An old-style plain text ID: "12345", "NODE_1", or "IIITS-0-KING"
      *
      * Handles URL decoding, whitespace, query parameters, URL fragments,
      * trailing slashes, and protects against path traversal.
      *
      * @param rawInput Raw scanned barcode value or deep link URI string.
-     * @return Normalized node identifier (e.g. "NODE_1"), or null if invalid/empty.
+     * @return Normalized identifier (e.g. "12345" or "NODE_1"), or null if invalid/empty.
      */
     fun extractNodeIdentifier(rawInput: String?): String? {
         if (rawInput.isNullOrBlank()) return null
@@ -24,7 +24,10 @@ object QrCodeParser {
 
         val candidate = if (trimmed.startsWith("http://", ignoreCase = true) ||
             trimmed.startsWith("https://", ignoreCase = true) ||
-            trimmed.contains("/node/", ignoreCase = true)
+            trimmed.contains("/note/", ignoreCase = true) ||
+            trimmed.contains("/node/", ignoreCase = true) ||
+            trimmed.startsWith("/note", ignoreCase = true) ||
+            trimmed.startsWith("/node", ignoreCase = true)
         ) {
             extractFromUrl(trimmed)
         } else {
@@ -45,13 +48,24 @@ object QrCodeParser {
 
     private fun extractFromUrl(urlStr: String): String? {
         return try {
+            // Find "/note/" or "/node/" marker
+            val noteMarker = "/note/"
             val nodeMarker = "/node/"
+            val noteIndex = urlStr.indexOf(noteMarker, ignoreCase = true)
             val nodeIndex = urlStr.indexOf(nodeMarker, ignoreCase = true)
-            val rawSegment = if (nodeIndex != -1) {
-                urlStr.substring(nodeIndex + nodeMarker.length)
-            } else {
-                val parsed = URI.create(urlStr)
-                parsed.path?.trimStart('/') ?: return null
+
+            val rawSegment = when {
+                noteIndex != -1 -> urlStr.substring(noteIndex + noteMarker.length)
+                nodeIndex != -1 -> urlStr.substring(nodeIndex + nodeMarker.length)
+                else -> {
+                    val parsed = URI.create(urlStr)
+                    val path = parsed.path ?: return null
+                    when {
+                        path.startsWith("/note", ignoreCase = true) -> path.removePrefix("/note").trimStart('/')
+                        path.startsWith("/node", ignoreCase = true) -> path.removePrefix("/node").trimStart('/')
+                        else -> path.trimStart('/')
+                    }
+                }
             }
 
             // Strip trailing slashes, query parameters, fragments
@@ -66,18 +80,21 @@ object QrCodeParser {
     }
 
     /**
-     * Checks if the given raw input is an HTTPS node deep link URL.
+     * Checks if the given raw input is an HTTPS note or node deep link URL.
      */
     fun isNodeUrl(rawInput: String?): Boolean {
         if (rawInput.isNullOrBlank()) return false
         val trimmed = rawInput.trim()
         return (trimmed.startsWith("http://", ignoreCase = true) ||
                 trimmed.startsWith("https://", ignoreCase = true)) &&
-                trimmed.contains("/node/", ignoreCase = true)
+                (trimmed.contains("/note/", ignoreCase = true) ||
+                 trimmed.contains("/node/", ignoreCase = true) ||
+                 trimmed.contains("/note", ignoreCase = true) ||
+                 trimmed.contains("/node", ignoreCase = true))
     }
 
     /**
-     * Constructs a full public QR URL for a given node identifier.
+     * Constructs a full public QR URL for a given note/node identifier.
      */
     fun buildNodeQrUrl(
         nodeIdentifier: String,

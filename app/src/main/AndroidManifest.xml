@@ -64,7 +64,7 @@
                     android:path="/__/auth/action" />
             </intent-filter>
 
-            <!-- Android App Links for Node Details (QR Migration) -->
+            <!-- Android App Links for Note / Node Details -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -73,7 +73,11 @@
                 <data
                     android:scheme="https"
                     android:host="${appLinksDomain}"
-                    android:pathPrefix="/node/" />
+                    android:pathPrefix="/note" />
+                <data
+                    android:scheme="https"
+                    android:host="${appLinksDomain}"
+                    android:pathPrefix="/node" />
             </intent-filter>
         </activity>
 

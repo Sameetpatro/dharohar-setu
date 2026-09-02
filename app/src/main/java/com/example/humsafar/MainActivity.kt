@@ -65,7 +65,9 @@ class MainActivity : ComponentActivity() {
                 }
         }
 
-        handleIncomingIntent(intent)
+        if (savedInstanceState == null) {
+            handleIncomingIntent(intent)
+        }
 
         setContent {
             var accent by remember { mutableStateOf<Accent>(appPrefs.getAccent()) }
