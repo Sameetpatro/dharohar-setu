@@ -6,16 +6,19 @@ import java.net.URLDecoder
 
 object QrCodeParser {
 
+    const val BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
     /**
      * Extracts and normalizes a node identifier from either:
-     * 1. A complete HTTPS URL: "https://humsafar.vercel.app/node/12345" or "https://humsafar.vercel.app/node/NODE_1"
-     * 2. An old-style plain text ID: "12345", "NODE_1", or "IIITS-0-KING"
+     * 1. A Base62 hashed ID (e.g. "Q0v", "Q0w", "Q10", counter from 100001)
+     * 2. A complete HTTPS URL: "https://dharohar-setu.onrender.com/node/Q0v" or "https://humsafar.vercel.app/node/12345"
+     * 3. A legacy plain text ID: "IIITS-0-KING", "QTB-0-KING", "NODE_1"
      *
      * Handles URL decoding, whitespace, query parameters, URL fragments,
      * trailing slashes, and protects against path traversal.
      *
      * @param rawInput Raw scanned barcode value or deep link URI string.
-     * @return Normalized identifier (e.g. "12345" or "NODE_1"), or null if invalid/empty.
+     * @return Normalized identifier (e.g. "Q0v" or "IIITS-0-KING"), or null if invalid/empty.
      */
     fun extractNodeIdentifier(rawInput: String?): String? {
         if (rawInput.isNullOrBlank()) return null
@@ -95,4 +98,45 @@ object QrCodeParser {
         val cleanId = nodeIdentifier.trim()
         return "$cleanBase/$cleanId"
     }
+
+    /**
+     * Encodes a non-negative counter value into a Base62 alphanumeric string.
+     * E.g. 100001 -> "Q0v"
+     */
+    fun encodeBase62(num: Long): String {
+        require(num >= 0) { "Base62 number must be non-negative" }
+        if (num == 0L) return BASE62_ALPHABET[0].toString()
+        val sb = StringBuilder()
+        var n = num
+        while (n > 0) {
+            sb.append(BASE62_ALPHABET[(n % 62).toInt()])
+            n /= 62
+        }
+        return sb.reverse().toString()
+    }
+
+    /**
+     * Decodes a Base62 string back into its numeric counter value.
+     * E.g. "Q0v" -> 100001
+     * Returns null if string contains characters outside [0-9A-Za-z].
+     */
+    fun decodeBase62(code: String?): Long? {
+        if (code.isNullOrBlank()) return null
+        var result = 0L
+        for (ch in code.trim()) {
+            val idx = BASE62_ALPHABET.indexOf(ch)
+            if (idx == -1) return null
+            result = result * 62 + idx
+        }
+        return result
+    }
+
+    /**
+     * Checks if a string is a valid Base62 alphanumeric identifier.
+     */
+    fun isBase62(candidate: String?): Boolean {
+        if (candidate.isNullOrBlank()) return false
+        return candidate.all { BASE62_ALPHABET.contains(it) }
+    }
 }
+

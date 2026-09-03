@@ -138,5 +138,74 @@ class QrCodeParserTest {
             "https://humsafar.vercel.app/node/IIITS-0-KING",
             QrCodeParser.buildNodeQrUrl("IIITS-0-KING", "https://humsafar.vercel.app/node/")
         )
+        assertEquals(
+            "https://dharohar-setu.onrender.com/node/Q0v",
+            QrCodeParser.buildNodeQrUrl("Q0v", "https://dharohar-setu.onrender.com/node")
+        )
+    }
+
+    // ── Base62 Hashing & Parsing Tests (Counter starting from 100001) ──────────
+
+    @Test
+    fun encodeBase62_counterStartingAt100001_producesExactCodes() {
+        assertEquals("Q0v", QrCodeParser.encodeBase62(100001L))
+        assertEquals("Q0w", QrCodeParser.encodeBase62(100002L))
+        assertEquals("Q0x", QrCodeParser.encodeBase62(100003L))
+        assertEquals("Q0y", QrCodeParser.encodeBase62(100004L))
+        assertEquals("Q0z", QrCodeParser.encodeBase62(100005L))
+        assertEquals("Q10", QrCodeParser.encodeBase62(100006L))
+        assertEquals("Q1C", QrCodeParser.encodeBase62(100018L))
+        assertEquals("Q1Q", QrCodeParser.encodeBase62(100032L))
+    }
+
+    @Test
+    fun decodeBase62_producesExactCounterValues() {
+        assertEquals(100001L, QrCodeParser.decodeBase62("Q0v"))
+        assertEquals(100002L, QrCodeParser.decodeBase62("Q0w"))
+        assertEquals(100003L, QrCodeParser.decodeBase62("Q0x"))
+        assertEquals(100006L, QrCodeParser.decodeBase62("Q10"))
+        assertEquals(100018L, QrCodeParser.decodeBase62("Q1C"))
+        assertEquals(100032L, QrCodeParser.decodeBase62("Q1Q"))
+    }
+
+    @Test
+    fun base62_roundTrip_matchesAllCounters() {
+        for (counter in 100001L..100100L) {
+            val encoded = QrCodeParser.encodeBase62(counter)
+            val decoded = QrCodeParser.decodeBase62(encoded)
+            assertEquals("Roundtrip mismatch for counter $counter", counter, decoded)
+        }
+    }
+
+    @Test
+    fun isBase62_validatesAlphanumericStrings() {
+        assertTrue(QrCodeParser.isBase62("Q0v"))
+        assertTrue(QrCodeParser.isBase62("Q1C"))
+        assertTrue(QrCodeParser.isBase62("100001"))
+        assertFalse(QrCodeParser.isBase62("IIITS-0-KING")) // contains '-'
+        assertFalse(QrCodeParser.isBase62("node_1"))       // contains '_'
+        assertFalse(QrCodeParser.isBase62(""))
+        assertFalse(QrCodeParser.isBase62(null))
+    }
+
+    @Test
+    fun extractNodeIdentifier_base62DeepLinkUrl_extractsCorrectId() {
+        assertEquals(
+            "Q0v",
+            QrCodeParser.extractNodeIdentifier("https://dharohar-setu.onrender.com/node/Q0v")
+        )
+        assertEquals(
+            "Q0w",
+            QrCodeParser.extractNodeIdentifier("https://dharohar-setu.onrender.com/node/Q0w/")
+        )
+        assertEquals(
+            "Q1C",
+            QrCodeParser.extractNodeIdentifier("https://dharohar-setu.onrender.com/node/Q1C?source=lens&ref=poster#details")
+        )
+        assertEquals(
+            "Q0v",
+            QrCodeParser.extractNodeIdentifier("   Q0v   ")
+        )
     }
 }
+
