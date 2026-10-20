@@ -79,7 +79,7 @@ fun AppNavigation(
             if (resp.isSuccessful && resp.body() != null) {
                 val result = resp.body()!!
                 if (result.isValid && result.nodeId != null && result.siteId != null) {
-                    ActiveSiteManager.onNodeScanned(result.nodeId)
+                    ActiveSiteManager.onNodeScanned(result.nodeId, result.siteId, result.nodeName)
                     navController.navigate(
                         nodeDetailRoute(result.nodeId, result.siteId, result.isKingNode)
                     ) {

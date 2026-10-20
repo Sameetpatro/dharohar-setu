@@ -20,16 +20,20 @@ class VoiceChatActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val activeSiteId = ActiveSiteManager.activeSiteId
         val intentSiteId = intent.getStringExtra(VoiceChatExtras.SITE_ID)
-        val resolvedSiteId = activeSiteId?.toString() ?: intentSiteId ?: ""
+        val activeSiteId = ActiveSiteManager.activeSiteId
+        val resolvedSiteId = intentSiteId?.takeIf { it.isNotBlank() } ?: activeSiteId?.toString() ?: ""
 
-        val activeNodeId = ActiveSiteManager.activeNodeId.value
         val intentNodeId = intent.getStringExtra(VoiceChatExtras.NODE_ID)
-        val resolvedNodeId = activeNodeId?.toString() ?: intentNodeId ?: ""
+        val activeNodeId = ActiveSiteManager.activeNodeId.value
+        val resolvedNodeId = intentNodeId?.takeIf { it.isNotBlank() } ?: activeNodeId?.toString() ?: ""
 
-        val resolvedSiteName = ActiveSiteManager.activeSiteName
-            .ifBlank { intent.getStringExtra(VoiceChatExtras.SITE_NAME) ?: "Heritage Site" }
+        val intentSiteName = intent.getStringExtra(VoiceChatExtras.SITE_NAME)
+        val resolvedSiteName = if (!intentSiteName.isNullOrBlank()) {
+            intentSiteName
+        } else {
+            ActiveSiteManager.activeSiteName.ifBlank { "Heritage Site" }
+        }
 
         Log.d("VoiceChatActivity", """
             ▶ LAUNCHED

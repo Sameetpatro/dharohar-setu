@@ -83,8 +83,9 @@ data class ChatMessage(
 )
 
 data class ChatRequest(
-    @SerializedName("site_id") val siteId: Int,
-    @SerializedName("node_id") val nodeId: Int?,
+    @SerializedName("site_id")  val siteId: Int? = null,
+    @SerializedName("node_id")  val nodeId: Int? = null,
+    @SerializedName("qr_value") val qrValue: String? = null,
     @SerializedName("message") val message: String,
     @SerializedName("history") val history: List<ChatMessage> = emptyList()
 )

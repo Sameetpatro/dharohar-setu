@@ -101,8 +101,9 @@ data class TripEndResponse(
 // without firebase_uid still work — chat must never fail on analytics writes.
 // ─────────────────────────────────────────────────────────────────────────────
 data class ChatRequest(
-    @SerializedName("site_id")      val siteId: Int,
+    @SerializedName("site_id")      val siteId: Int? = null,
     @SerializedName("node_id")      val nodeId: Int? = null,
+    @SerializedName("qr_value")     val qrValue: String? = null,
     @SerializedName("message")      val message: String,
     @SerializedName("history")      val history: List<ChatHistoryItem> = emptyList(),
     @SerializedName("firebase_uid") val firebaseUid: String? = null,

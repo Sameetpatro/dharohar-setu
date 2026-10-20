@@ -52,7 +52,7 @@
             <!-- Email Link Authentication - Firebase Hosting Subdomain -->
             <!-- IMPORTANT: Replace 'dharoharsetu' with YOUR Firebase Project ID -->
             <!-- Get it from: Firebase Console → Project Settings → Project ID -->
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

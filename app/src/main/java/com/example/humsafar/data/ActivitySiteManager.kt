@@ -86,9 +86,19 @@ object ActiveSiteManager {
     // We set the node here so voice/chat automatically uses node-level context
     // ─────────────────────────────────────────────────────────────────────────
 
-    fun onNodeScanned(nodeId: Int) {
-        Log.i(TAG, "Node scanned: node_id=$nodeId for site_id=${activeSiteId}")
+    fun onNodeScanned(nodeId: Int, siteId: Int? = null, siteName: String? = null) {
+        Log.i(TAG, "Node scanned: node_id=$nodeId for site_id=${siteId ?: activeSiteId}")
         _activeNodeId.value = nodeId
+        if (siteId != null && (_activeSite.value == null || _activeSite.value?.id != siteId)) {
+            _activeSite.value = ActiveSite(
+                id = siteId,
+                name = siteName ?: "Heritage Site",
+                latitude = 0.0,
+                longitude = 0.0,
+                geofenceRadiusMeters = 500,
+                distanceMeters = 0.0
+            )
+        }
         // A scan may complete an in-flight bonus "Bingo" challenge.
         BonusGameManager.onNodeScanned(nodeId)
     }

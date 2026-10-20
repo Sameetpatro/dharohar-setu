@@ -68,29 +68,33 @@ class ChatbotActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // ── Resolve site_id ───────────────────────────────────────────────
-        // Primary: ActiveSiteManager — always has the real DB primary key
-        //          because it was set by GPS → /sites/nearby → backend haversine
-        // Fallback: Intent extra — for manual launches from other screens
-        val activeSiteId   = ActiveSiteManager.activeSiteId
+        // Primary: Intent extra (when launched from a specific site/node screen or QR result)
+        // Fallback: ActiveSiteManager (active physical site detected via GPS)
         val intentSiteId   = intent.getStringExtra(ChatbotExtras.SITE_ID)?.toIntOrNull()
-        val resolvedSiteId = activeSiteId ?: intentSiteId ?: -1
-        Log.d("ChatbotActivity", "SITE_ID_DEBUG: activeSiteId=$activeSiteId | intentSiteId=$intentSiteId | resolvedSiteId=$resolvedSiteId | activeNodeId=$activeNodeId")
+        val activeSiteId   = ActiveSiteManager.activeSiteId
+        val resolvedSiteId = intentSiteId ?: activeSiteId ?: -1
 
         // ── Resolve node_id ───────────────────────────────────────────────
-        // Primary: ActiveSiteManager — set after QR scan via onNodeScanned()
-        // Fallback: Intent extra
-        val activeNodeId   = ActiveSiteManager.activeNodeId.value
+        // Primary: Intent extra (when launched from a specific node screen)
+        // Fallback: ActiveSiteManager (last scanned node)
         val intentNodeId   = intent.getStringExtra(ChatbotExtras.NODE_ID)?.toIntOrNull()
-        val resolvedNodeId = activeNodeId ?: intentNodeId
+        val activeNodeId   = ActiveSiteManager.activeNodeId.value
+        val resolvedNodeId = intentNodeId ?: activeNodeId
 
         // ── Site name ─────────────────────────────────────────────────────
-        val resolvedSiteName = ActiveSiteManager.activeSiteName
-            .ifBlank { intent.getStringExtra(ChatbotExtras.SITE_NAME) ?: "Heritage Site" }
+        val intentSiteName = intent.getStringExtra(ChatbotExtras.SITE_NAME)
+        val resolvedSiteName = if (!intentSiteName.isNullOrBlank()) {
+            intentSiteName
+        } else {
+            ActiveSiteManager.activeSiteName.ifBlank { "Heritage Site" }
+        }
+
+        Log.d("ChatbotActivity", "SITE_ID_DEBUG: intentSiteId=$intentSiteId | activeSiteId=$activeSiteId | resolvedSiteId=$resolvedSiteId | intentNodeId=$intentNodeId | activeNodeId=$activeNodeId | resolvedNodeId=$resolvedNodeId")
 
         Log.d("ChatbotActivity", """
             ▶ LAUNCHED
-              activeSiteId=$activeSiteId  intentSiteId=$intentSiteId  → resolved=$resolvedSiteId
-              activeNodeId=$activeNodeId  intentNodeId=$intentNodeId  → resolved=$resolvedNodeId
+              intentSiteId=$intentSiteId  activeSiteId=$activeSiteId  → resolved=$resolvedSiteId
+              intentNodeId=$intentNodeId  activeNodeId=$activeNodeId  → resolved=$resolvedNodeId
               siteName='$resolvedSiteName'
         """.trimIndent())
 
@@ -127,12 +131,12 @@ suspend fun callChatApi(
 ): String = withContext(Dispatchers.IO) {
     try {
         val siteIdInt = siteId.toIntOrNull()
-        if (siteIdInt == null || siteIdInt == -1) {
-            Log.e("ChatbotActivity", "⚠️ callChatApi: invalid siteId='$siteId'")
-            return@withContext "Error: not inside a heritage site. Please move closer to the entrance."
-        }
-
         val nodeIdInt = nodeId?.toIntOrNull()
+
+        if ((siteIdInt == null || siteIdInt == -1) && (nodeIdInt == null || nodeIdInt == -1)) {
+            Log.e("ChatbotActivity", "⚠️ callChatApi: invalid siteId='$siteId' and nodeId='$nodeId'")
+            return@withContext "Error: not inside a heritage site. Please scan a QR code or move closer to the entrance."
+        }
 
         Log.d("ChatbotActivity",
             "→ POST /chat/  site_id=$siteIdInt  node_id=$nodeIdInt  msg='${message.take(60)}'")

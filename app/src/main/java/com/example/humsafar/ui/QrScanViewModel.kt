@@ -61,7 +61,7 @@ class QrScanViewModel : ViewModel() {
 
                 // Register the scan so it can complete an in-flight bonus challenge,
                 // regardless of whether a trip is active.
-                result.nodeId?.let { com.example.humsafar.data.ActiveSiteManager.onNodeScanned(it) }
+                result.nodeId?.let { com.example.humsafar.data.ActiveSiteManager.onNodeScanned(it, result.siteId, site?.name ?: result.nodeName) }
 
                 when {
                     // ── KING NODE ──────────────────────────────────────────
